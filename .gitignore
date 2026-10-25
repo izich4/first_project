@@ -1,0 +1,21 @@
+# Виртуальное окружение Python
+venv/
+.venv/
+env/
+
+# Кэш Python
+__pycache__/
+*.py[cod]
+
+# Секретные ключи и настройки (ТОКЕН БОТА!)
+config.py
+.env
+
+# Локальная база данных пользователя (чтобы личные задачи не летели на GitHub)
+deadlines.json
+
+# Служебные файлы редакторов и ОС
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
