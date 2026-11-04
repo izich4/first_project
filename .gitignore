@@ -19,3 +19,6 @@ deadlines.json
 .idea/
 .DS_Store
 Thumbs.db
+
+# База данных SQLite
+database.db
