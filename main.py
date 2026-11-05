@@ -1,6 +1,7 @@
 import telebot
 from telebot import types
 from config import BOT_TOKEN
+from database import init_db, get_user_deadlines
 
 # Подключаем бота с помощью токена
 bot = telebot.TeleBot(BOT_TOKEN)
@@ -46,19 +47,30 @@ def send_help(message):
 
 # Обработчик кнопки «➕ Добавить дедлайн» (заготовка для будущих недель)
 @bot.message_handler(func=lambda message: message.text == "➕ Добавить дедлайн")
-def add_deadline(message):
+def add_deadline_stub(message):
     bot.send_message(
         message.chat.id,
-        "🛠 Функция добавления задач в базу данных SQLite скоро появится!"
+        "🛠 База данных подключена! На следующей неделе мы добавим пошаговый ввод задач!"
     )
 
 # Обработчик кнопки «📋 Мои дедлайны» (заготовка для будущих недель)
 @bot.message_handler(func=lambda message: message.text == "📋 Мои дедлайны")
-def list_deadline_stub(message):
-    bot.send_message(
-        message.chat.id,
-        "📂 Твой список дедлайнов пока пуст. На следующей неделе мы подключим базу данных!"
-    )
+def list_deadlines(message):
+    deadlines = get_user_deadlines(message.from_user.id)
+
+    if not deadlines:
+        bot.send_message(
+            message.chat.id,
+            "📂 В базе данных пока нет активных дедлайнов. Скоро мы научимся их добавлять!"
+        )
+        return
+
+    response = "📋 Твои учебные дедлайны:\n\n"
+    for idx, item in enumerate(deadlines, start=1):
+        task_id, subject, task, due_date = item
+        response += f"{idx}. 📚 {subject} — {task} (до {due_date})\n"
+
+    bot.send_message(message.chat.id, response)
 
 # Обработчик любого другого текста
 @bot.message_handler(content_types=['text'])
@@ -70,5 +82,6 @@ def handle_unknown_text(message):
     )
 
 if __name__ == '__main__':
-    print("Бот запущен! Тестируем кнопочное меню...")
+    init_db()
+    print("База данных SQLite проверена. Бот запущен!")
     bot.infinity_polling()
