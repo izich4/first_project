@@ -1,7 +1,7 @@
 import telebot
 from telebot import types
 from config import BOT_TOKEN
-from database import init_db, get_user_deadlines
+from database import init_db, get_user_deadlines, add_deadline
 
 # Подключаем бота с помощью токена
 bot = telebot.TeleBot(BOT_TOKEN)
@@ -44,6 +44,17 @@ def send_help(message):
         "• Нажми /start, если меню случайно скрылось."
     )
     bot.send_message(message.chat.id, help_text)
+
+# Проверка команды отмены ввода
+def check_cancel(message):
+    if message.text == '/cancel':
+        bot.send_message(
+            message.chat.id,
+            "❌ Добавление дедлайна отменено.",
+            reply_markup=get_main_menu()
+        )
+        return True
+    return False
 
 # Обработчик кнопки «➕ Добавить дедлайн» (заготовка для будущих недель)
 @bot.message_handler(func=lambda message: message.text == "➕ Добавить дедлайн")
