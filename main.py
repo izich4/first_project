@@ -66,6 +66,33 @@ def start_add_deadline(message):
     )
     bot.register_next_step_handler(msg, process_subject_step)
 
+# Шаг 2: Получение предмета и запрос описания задачи
+def process_subject_step(message):
+    if check_cancel(message):
+        return
+
+    subject = message.text.strip()
+    msg = bot.send_message(
+        message.chat.id,
+        f"📝 Шаг 2 из 3. Что именно нужно сдать по предмету «{subject}»?\n"
+        "(например: Лабораторная работа №3)"
+    )
+    bot.register_next_step_handler(msg, process_task_step, subject)
+
+
+# Шаг 3: Получение описания задачи и запрос даты сдачи
+def process_task_step(message, subject):
+    if check_cancel(message):
+        return
+
+    task = message.text.strip()
+    msg = bot.send_message(
+        message.chat.id,
+        "📅 Шаг 3 из 3. Введи дату сдачи в формате ДД.ММ.ГГГГ\n"
+        "(например: 25.11.2026):"
+    )
+    bot.register_next_step_handler(msg, process_date_step, subject, task)
+
 # Обработчик кнопки «📋 Мои дедлайны» (заготовка для будущих недель)
 @bot.message_handler(func=lambda message: message.text == "📋 Мои дедлайны")
 def list_deadlines(message):
