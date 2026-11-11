@@ -56,13 +56,15 @@ def check_cancel(message):
         return True
     return False
 
-# Обработчик кнопки «➕ Добавить дедлайн» (заготовка для будущих недель)
+# Шаг 1: Начало диалога и запрос названия предмета
 @bot.message_handler(func=lambda message: message.text == "➕ Добавить дедлайн")
-def add_deadline_stub(message):
-    bot.send_message(
+def start_add_deadline(message):
+    msg = bot.send_message(
         message.chat.id,
-        "🛠 База данных подключена! На следующей неделе мы добавим пошаговый ввод задач!"
+        "📚 Шаг 1 из 3. Введи название предмета (или /cancel для отмены):",
+        reply_markup=types.ReplyKeyboardRemove()
     )
+    bot.register_next_step_handler(msg, process_subject_step)
 
 # Обработчик кнопки «📋 Мои дедлайны» (заготовка для будущих недель)
 @bot.message_handler(func=lambda message: message.text == "📋 Мои дедлайны")
