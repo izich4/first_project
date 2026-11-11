@@ -93,6 +93,22 @@ def process_task_step(message, subject):
     )
     bot.register_next_step_handler(msg, process_date_step, subject, task)
 
+# Финал диалога: сохранение дедлайна в базу данных SQLite
+def process_date_step(message, subject, task):
+    if check_cancel(message):
+        return
+
+    due_date = message.text.strip()
+    add_deadline(message.from_user.id, subject, task, due_date)
+
+    success_text = (
+        "✅ Дедлайн успешно сохранен в базу данных!\n\n"
+        f"📚 Предмет: {subject}\n"
+        f"📝 Задача: {task}\n"
+        f"📅 Сдать до: {due_date}"
+    )
+    bot.send_message(message.chat.id, success_text, reply_markup=get_main_menu())
+
 # Обработчик кнопки «📋 Мои дедлайны» (заготовка для будущих недель)
 @bot.message_handler(func=lambda message: message.text == "📋 Мои дедлайны")
 def list_deadlines(message):
