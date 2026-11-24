@@ -1,4 +1,5 @@
 import telebot
+from database import init_db, add_deadline, get_user_deadlines, delete_deadline
 from datetime import datetime, date
 from telebot import types
 from config import BOT_TOKEN
@@ -152,30 +153,38 @@ def process_date_step(message, subject, task):
     )
     bot.send_message(message.chat.id, success_text, reply_markup=get_main_menu())
 
-# Сортировка и формирование текста списка дедлайнов
+# Сортировка, формирование текста списка и Inline-кнопок удаления
 def format_deadlines_list(user_id):
     deadlines = get_user_deadlines(user_id)
     if not deadlines:
-        return None
+        return None, None
 
     sorted_deadlines = sorted(
         deadlines,
         key=lambda item: parse_date(item[3]) or date.max
     )
 
+    inline_markup = types.InlineKeyboardMarkup(row_width=1)
     response = "📋 Твои учебные дедлайны:\n\n"
+
     for idx, item in enumerate(sorted_deadlines, start=1):
         task_id, subject, task, due_date = item
         status = get_deadline_status(due_date)
         response += f"{idx}. 📚 {subject} — {task}\n   📅 До {due_date} ({status})\n\n"
 
-    return response
+        btn = types.InlineKeyboardButton(
+            text=f"✅ Выполнить №{idx}: {subject}",
+            callback_data=f"done_{task_id}"
+        )
+        inline_markup.add(btn)
+
+    return response, inline_markup
 
 
-# Вывод всех задач пользователя из SQLite
+# Вывод всех задач пользователя с кнопками выполнения
 @bot.message_handler(func=lambda message: message.text == "📋 Мои дедлайны")
 def list_deadlines(message):
-    text = format_deadlines_list(message.from_user.id)
+    text, inline_markup = format_deadlines_list(message.from_user.id)
     if not text:
         bot.send_message(
             message.chat.id,
@@ -183,7 +192,7 @@ def list_deadlines(message):
         )
         return
 
-    bot.send_message(message.chat.id, text)
+    bot.send_message(message.chat.id, text, reply_markup=inline_markup)
 
 # Обработчик любого другого текста
 @bot.message_handler(content_types=['text'])
