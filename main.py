@@ -64,6 +64,25 @@ def parse_date(date_str):
     except ValueError:
         return None
 
+# Расчет оставшихся дней и выбор индикатора срочности
+def get_deadline_status(due_date_str):
+    due_date = parse_date(due_date_str)
+    if due_date is None:
+        return "⚪ Неизвестный формат даты"
+
+    days_left = (due_date - date.today()).days
+
+    if days_left < 0:
+        return f"⚫ Просрочено на {abs(days_left)} дн."
+    elif days_left == 0:
+        return "🔴 Сдать СЕГОДНЯ!"
+    elif days_left <= 2:
+        return f"🔴 Осталось {days_left} дн."
+    elif days_left <= 7:
+        return f"🟡 Осталось {days_left} дн."
+    else:
+        return f"🟢 Осталось {days_left} дн."
+
 # Шаг 1: Начало диалога и запрос названия предмета
 @bot.message_handler(func=lambda message: message.text == "➕ Добавить дедлайн")
 def start_add_deadline(message):
