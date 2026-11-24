@@ -1,4 +1,5 @@
 import telebot
+from datetime import datetime, date
 from telebot import types
 from config import BOT_TOKEN
 from database import init_db, get_user_deadlines, add_deadline
@@ -56,6 +57,13 @@ def check_cancel(message):
         return True
     return False
 
+# Преобразование строки ДД.ММ.ГГГГ в объект даты (или None при ошибке)
+def parse_date(date_str):
+    try:
+        return datetime.strptime(date_str, "%d.%m.%Y").date()
+    except ValueError:
+        return None
+
 # Шаг 1: Начало диалога и запрос названия предмета
 @bot.message_handler(func=lambda message: message.text == "➕ Добавить дедлайн")
 def start_add_deadline(message):
@@ -93,12 +101,28 @@ def process_task_step(message, subject):
     )
     bot.register_next_step_handler(msg, process_date_step, subject, task)
 
-# Финал диалога: сохранение дедлайна в базу данных SQLite
+# Финал диалога: проверка даты и сохранение дедлайна в SQLite
 def process_date_step(message, subject, task):
+    if not message.text:
+        msg = bot.send_message(
+            message.chat.id,
+            "⚠️ Пожалуйста, отправь дату текстом в формате ДД.ММ.ГГГГ (или /cancel для отмены):"
+        )
+        bot.register_next_step_handler(msg, process_date_step, subject, task)
+        return
+
     if check_cancel(message):
         return
 
     due_date = message.text.strip()
+    if parse_date(due_date) is None:
+        msg = bot.send_message(
+            message.chat.id,
+            "⚠️ Неверный формат даты! Введи дату строго в виде ДД.ММ.ГГГГ (например: 05.12.2026):"
+        )
+        bot.register_next_step_handler(msg, process_date_step, subject, task)
+        return
+
     add_deadline(message.from_user.id, subject, task, due_date)
 
     success_text = (
