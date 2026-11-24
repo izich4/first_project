@@ -152,24 +152,38 @@ def process_date_step(message, subject, task):
     )
     bot.send_message(message.chat.id, success_text, reply_markup=get_main_menu())
 
-# Обработчик кнопки «📋 Мои дедлайны» (заготовка для будущих недель)
+# Сортировка и формирование текста списка дедлайнов
+def format_deadlines_list(user_id):
+    deadlines = get_user_deadlines(user_id)
+    if not deadlines:
+        return None
+
+    sorted_deadlines = sorted(
+        deadlines,
+        key=lambda item: parse_date(item[3]) or date.max
+    )
+
+    response = "📋 Твои учебные дедлайны:\n\n"
+    for idx, item in enumerate(sorted_deadlines, start=1):
+        task_id, subject, task, due_date = item
+        status = get_deadline_status(due_date)
+        response += f"{idx}. 📚 {subject} — {task}\n   📅 До {due_date} ({status})\n\n"
+
+    return response
+
+
+# Вывод всех задач пользователя из SQLite
 @bot.message_handler(func=lambda message: message.text == "📋 Мои дедлайны")
 def list_deadlines(message):
-    deadlines = get_user_deadlines(message.from_user.id)
-
-    if not deadlines:
+    text = format_deadlines_list(message.from_user.id)
+    if not text:
         bot.send_message(
             message.chat.id,
-            "📂 В базе данных пока нет активных дедлайнов. Скоро мы научимся их добавлять!"
+            "📂 Список дедлайнов пуст. Нажми «➕ Добавить дедлайн», чтобы создать первую запись!"
         )
         return
 
-    response = "📋 Твои учебные дедлайны:\n\n"
-    for idx, item in enumerate(deadlines, start=1):
-        task_id, subject, task, due_date = item
-        response += f"{idx}. 📚 {subject} — {task} (до {due_date})\n"
-
-    bot.send_message(message.chat.id, response)
+    bot.send_message(message.chat.id, text)
 
 # Обработчик любого другого текста
 @bot.message_handler(content_types=['text'])
