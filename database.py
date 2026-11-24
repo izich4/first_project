@@ -36,3 +36,13 @@ def get_user_deadlines(user_id):
             (user_id,)
         )
         return cursor.fetchall()
+
+# Удаление выполненного дедлайна из базы
+def delete_deadline(deadline_id, user_id):
+    with sqlite3.connect(DB_NAME) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "DELETE FROM deadlines WHERE id = ? AND user_id = ?",
+            (deadline_id, user_id)
+        )
+        conn.commit()
